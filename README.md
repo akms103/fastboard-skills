@@ -29,10 +29,13 @@ agent-skills/
 │   │   ├── references/        # логика применения, формат colors.json и цветовых ссылок
 │   │   ├── templates/         # скелет файла ролей палитры
 │   │   └── scripts/           # создание группы цветов, файл ролей, независимый чекер цветов
-│   └── fastboard-mcp-master/  # скилл: доступ к Fastboard по MCP на личном токене fbpat_
+│   ├── fastboard-mcp-master/  # скилл: доступ к Fastboard по MCP на личном токене fbpat_
 │       ├── SKILL.md
 │       ├── references/        # таблица проблем и обходов (транспорт, файл, записи, конфиг)
 │       └── scripts/           # клиент MCP: tools / schema / call
+│   └── fastboard-widget-naming/  # скилл: имена объектов страницы (блоки → типы → фильтры)
+│       ├── SKILL.md
+│       └── scripts/           # черновик карты имён и применение карты (propose / apply)
 ├── scripts/
 │   ├── install.mjs            # разложить skills/ по каталогам агентских систем
 │   └── validate-skills.mjs    # проверка frontmatter по спецификации Agent Skills
@@ -90,6 +93,20 @@ blur, рамки, зум, анимация), правила проверки, с
 Что из этого запускается руками — в разделе «Проверки внутри скилла»; как отдать команде —
 в разделе «Подключение».
 
+### `fastboard-widget-naming` — имена объектов страницы
+
+Платформа сама называет виджеты («Текст 13», «Текст копия 10», «Линейная диаграмма 1 (8) (2)»,
+«svg объект 1 Копия 1»), и разложить по смыслу 50–150 объектов руками — это часы работы.
+Внутри: схема имени `<Блок> · <тип> <назначение>` с лимитом поля просмотра в 30 знаков и правилом
+«блок — слово, а не номер» (порядок в панели виджетов не совпадает ни с координатами, ни со слоями);
+определение смысловых блоков по координатам плюс переменным видимости (блоки перекрываются по дизайну);
+источники подписи по силе — видимый заголовок, шаблон `viewSettings.text.text`, `customRequest`
+и `filterAndGroupRequest`; отдельное именование фильтров по SQL-колонке (`Фильтр · block_name`).
+Скрипт `scripts/fb_widget_names.py`: `propose` собирает черновик карты (блоки, типы, колонки фильтров,
+проверка 30 знаков и дублей), `apply` применяет карту и печатает доказательства — сколько имён изменено,
+ноль лишних путей, «кроме имён не тронуто». Заголовки на доске (`header.text`), данные, SQL и позиции
+не меняются.
+
 ## Куда смотрит каждая система
 
 | Система | Личный уровень | Уровень проекта | Каталог скиллов |
@@ -114,6 +131,7 @@ hermes skills install sn0wy-owl/fastboard-skills/dashboard-build
 hermes skills install sn0wy-owl/fastboard-skills/bi-dashboard-styleguide
 hermes skills install sn0wy-owl/fastboard-skills/fastboard-palettes
 hermes skills install sn0wy-owl/fastboard-skills/fastboard-mcp-master
+hermes skills install sn0wy-owl/fastboard-skills/fastboard-widget-naming
 hermes skills update                           # подтянуть новые версии
 ```
 
@@ -190,6 +208,11 @@ python3 scripts/check_colors.py page.json --palette palette-roles.json   # цв�
 
 cd skills/fastboard-mcp-master
 FB_PAT=fbpat_… FB_MCP=https://<хост>/back/api/v3/mcp python3 scripts/fb_mcp.py tools
+
+cd skills/fastboard-widget-naming
+python3 scripts/fb_widget_names.py propose page.json -o names.csv         # черновик карты имён
+python3 scripts/fb_widget_names.py propose page.json -o names.csv --blocks blocks.json   # с именами блоков
+python3 scripts/fb_widget_names.py apply page.json names.csv -o renamed.json             # применить карту
 ```
 
 (файл `page.json` — рабочий артефакт, в git не попадает)
