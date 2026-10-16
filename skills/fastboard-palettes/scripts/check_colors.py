@@ -69,6 +69,10 @@ def describe(ref) -> tuple[str, str, str]:
                 return "цвет палитры", value["colorId"], key
             if value.get("level"):
                 return f"уровень темы {value['level']}", "", key
+            if value.get("type") == "color":
+                # `{type:"color", colorId:null, groupId:null}` — «цвет по умолчанию темы»:
+                # легальное состояние (так залиты белые карточки), но палитра тут не применена
+                return "цвет по умолчанию темы", "", key
     return "непонятная ссылка", "", ""
 
 
@@ -115,6 +119,10 @@ def main() -> int:
             if page_id and UUID_RE.match(page_id) and key and key != page_id:
                 problems.append(f"{widget_name}: «{label}» — уровень темы ключуется id страницы "
                                 f"{page_id[:8]}…, а стоит {key[:8]}…")
+        elif kind == "цвет по умолчанию темы":
+            if required:
+                problems.append(f"{widget_name}: «{label}» — цвет взят из темы, а не из палитры "
+                                f"(colorId и groupId пустые)")
         elif expected_key and key and key != expected_key:
             problems.append(f"{widget_name}: «{label}» — ключ ссылки {key[:8]}… вместо paletteId "
                             f"{expected_key[:8]}…")

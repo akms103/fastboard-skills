@@ -87,10 +87,10 @@ def parse_colors(tokens: list[str]) -> list[dict]:
             hexv = _check_hex(parts[0])
             name = parts[1].strip() if len(parts) > 1 else ""
             opacity = 100
+            if len(parts) > 3:
+                raise SystemExit(f"{token!r}: слишком много частей, ждём '#hex:имя:opacity'")
             if len(parts) > 2:
                 opacity = _check_opacity(parts[2])
-            elif len(parts) > 3:
-                raise SystemExit(f"{token!r}: слишком много частей, ждём '#hex:имя:opacity'")
             h, l, s = hex_to_hsl(hexv)
             colors.append({"h": h, "l": l, "s": s, "id": str(uuid.uuid4()),
                            "hex": hexv, "name": name, "opacity": opacity})

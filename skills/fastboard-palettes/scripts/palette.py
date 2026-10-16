@@ -126,8 +126,10 @@ class Palette:
                 continue
             if not spec.get("hex"):
                 problems.append(f"роль {role}: нет оттенка для макета")
-            if not isinstance(spec.get("level"), int):
-                problems.append(f"роль {role}: нужен level 1–5 — тексты красятся уровнями темы")
+            level = spec.get("level")
+            if type(level) is not int or not 1 <= level <= 5:
+                problems.append(f"роль {role}: level={level!r} — нужен level 1–5 "
+                                f"(уровни темы для текстов), а не любое число")
         for role in self.roles:
             if role not in ROLES:
                 problems.append(f"роль {role}: неизвестная роль")
