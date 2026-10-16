@@ -84,7 +84,8 @@ blur, рамки, зум, анимация), правила проверки, с
 «Multipart tool requires file payload with base64 encoding»), обязательный порядок записи
 с `get_last_settings_timestamp`, таблица проблем «симптом → причина → обход» (401 на REST с PAT,
 405/404 на чужих путях, MCP не появился в сессии) и клиент `scripts/fb_mcp.py` с командами
-`tools` / `schema` / `call --file`.
+`tools` / `schema` / `call --file`. Рядом — памятка для человека `references/USER_GUIDE.md`:
+какие данные собрать (BASE_URL, PROJECT_ID, PAT) и какое сообщение передать агенту.
 
 Что из этого запускается руками — в разделе «Проверки внутри скилла»; как отдать команде —
 в разделе «Подключение».
