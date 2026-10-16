@@ -24,6 +24,15 @@ agent-skills/
 │       ├── references/        # принципы, токены, нормализация настроек, правила проверки
 │       ├── templates/         # стартовый файл токенов
 │       └── scripts/           # чекер стиля готовой страницы
+│   ├── fastboard-palettes/    # скилл: палитры Fastboard (создать → роли → применить → проверить)
+│   │   ├── SKILL.md
+│   │   ├── references/        # логика применения, формат colors.json и цветовых ссылок
+│   │   ├── templates/         # скелет файла ролей палитры
+│   │   └── scripts/           # создание группы цветов, файл ролей, независимый чекер цветов
+│   └── fastboard-mcp-master/  # скилл: доступ к Fastboard по MCP на личном токене fbpat_
+│       ├── SKILL.md
+│       ├── references/        # таблица проблем и обходов (транспорт, файл, записи, конфиг)
+│       └── scripts/           # клиент MCP: tools / schema / call
 ├── scripts/
 │   ├── install.mjs            # разложить skills/ по каталогам агентских систем
 │   └── validate-skills.mjs    # проверка frontmatter по спецификации Agent Skills
@@ -57,6 +66,26 @@ HTML-предпросмотра, скелет сборщика и `check_page.py
 с привязкой к ключам формата страницы, список донорского наследия (шрифты, сетка, чужие тексты,
 blur, рамки, зум, анимация), правила проверки, стартовый файл токенов и независимый чекер.
 
+### `fastboard-palettes` — палитры: создать → роли → применить → проверить
+
+Четыре артефакта, которые остаются в проекте: `colors.json` (реестр групп цветов), файл ролей
+(фон страницы, фон виджета, серии, разрез, тексты), собранная страница, где нет ни одного hex —
+только ссылки `paletteId → groupId → colorId`, и отчёт независимого чекера.
+Внутри: форматы `colors.json` и обеих цветовых ссылок, карта «что где в JSON страницы», порядок
+обработки (сантайз → нормализация → палитра, иначе чистка сносит цвета), скрипт создания группы
+цветов, файл ролей, `check_colors.py` (код 1 при мёртвых ссылках) и таблица «что подтверждено
+на импорте, а что требует образца».
+
+### `fastboard-mcp-master` — доступ к Fastboard по MCP
+
+Проект читается и правится **без пользовательской сессии**: MCP-эндпоинт `<BASE_URL>/api/v3/mcp`
+авторизует личный токен проекта (`fbpat_…`), JSON-RPC `tools/call`. Внутри: строгий конверт файла
+`{contentType, encoding:"base64", data}` (на любую другую форму сервер отвечает
+«Multipart tool requires file payload with base64 encoding»), обязательный порядок записи
+с `get_last_settings_timestamp`, таблица проблем «симптом → причина → обход» (401 на REST с PAT,
+405/404 на чужих путях, MCP не появился в сессии) и клиент `scripts/fb_mcp.py` с командами
+`tools` / `schema` / `call --file`.
+
 Что из этого запускается руками — в разделе «Проверки внутри скилла»; как отдать команде —
 в разделе «Подключение».
 
@@ -78,10 +107,12 @@ blur, рамки, зум, анимация), правила проверки, с
 ### 1. Как tap в Hermes (для всей команды)
 
 ```bash
-hermes skills tap add <owner>/fastboard-skills     # один раз
+hermes skills tap add sn0wy-owl/fastboard-skills     # один раз
 hermes skills search dashboard                 # найти
-hermes skills install <owner>/fastboard-skills/dashboard-build
-hermes skills install <owner>/fastboard-skills/bi-dashboard-styleguide
+hermes skills install sn0wy-owl/fastboard-skills/dashboard-build
+hermes skills install sn0wy-owl/fastboard-skills/bi-dashboard-styleguide
+hermes skills install sn0wy-owl/fastboard-skills/fastboard-palettes
+hermes skills install sn0wy-owl/fastboard-skills/fastboard-mcp-master
 hermes skills update                           # подтянуть новые версии
 ```
 
@@ -150,6 +181,14 @@ python3 scripts/check_page.py page.json          # независимая про
 
 cd skills/bi-dashboard-styleguide
 python3 scripts/check_style.py page.json         # стиль: 16 правил, код 1 при нарушениях
+
+cd skills/fastboard-palettes
+python3 scripts/add_palette.py colors.json "Заказчик" "#0079c2:основной" "#4fa3db:светлый"
+python3 scripts/palette.py palette-roles.json    # файл ролей: что заполнено, что ждёт id
+python3 scripts/check_colors.py page.json --palette palette-roles.json   # цвета доехали?
+
+cd skills/fastboard-mcp-master
+FB_PAT=fbpat_… FB_MCP=https://<хост>/back/api/v3/mcp python3 scripts/fb_mcp.py tools
 ```
 
 (файл `page.json` — рабочий артефакт, в git не попадает)

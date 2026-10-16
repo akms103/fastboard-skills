@@ -73,7 +73,9 @@ function validateSkill(dirName) {
   else {
     if (description.length > 1024) errors.push(`description длиннее 1024 символов (${description.length})`)
     if (description.length < 40) warnings.push('description короче 40 символов — агенту не хватит контекста для триггера')
-    if (!/\b(use when|когда|применяй|asked|нужно|сделай)\b/i.test(description)) {
+    // Границы слова в JS-регулярке опираются на ASCII-алфавит и на кириллице не срабатывают,
+    // поэтому русские триггеры («когда», «нужно») ищутся подстрокой, без границ.
+    if (!/(use when|когда|применяй|asked|нужно|сделай)/i.test(description)) {
       warnings.push('в description нет указания «когда применять» — это триггер загрузки скилла')
     }
   }
